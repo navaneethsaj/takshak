@@ -2,17 +2,24 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="10dp">
+
     <TextView
+        android:id="@+id/identifier"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/identifier" />
+        android:text="1010" />
+
     <TextView
+        android:id="@+id/name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/name"/>
+        android:text="Ram" />
+
     <TextView
+        android:id="@+id/mobileno"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/mobileno"/>
+        android:text="9876543210" />
 </LinearLayout>

@@ -4,12 +4,14 @@ import android.annotation.TargetApi;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,11 +26,23 @@ import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+    ListView listView;
+    String url = "https://demo1275613.mockable.io/test";
 
     @TargetApi(Build.VERSION_CODES.M)
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -64,15 +78,10 @@ public class MainActivity extends AppCompatActivity
 
 
         //goes from here
+        listView = (ListView) findViewById(R.id.listview);
 
-        ArrayList<StudentObject> studentLists = new ArrayList<StudentObject>();
-        studentLists.add(new StudentObject("name1","id1","987654321"));
-        studentLists.add(new StudentObject("name2","id2","887654321"));
-        studentLists.add(new StudentObject("name3","id3","787654321"));
+        new MyAsyncTask().execute(url);
 
-        ListView listView = (ListView) findViewById(R.id.listview);
-        MyListAdapter adapter = new MyListAdapter(this,R.layout.mylist,studentLists);
-        listView.setAdapter(adapter);
     }
 
     @Override
@@ -146,4 +155,73 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    public class MyAsyncTask extends AsyncTask<String, Void, ArrayList<StudentObject>>{
+
+        @Override
+        protected ArrayList<StudentObject> doInBackground(String... strings) {
+            ArrayList<StudentObject> studentLists = new ArrayList<StudentObject>();
+            /*studentLists.add(new StudentObject("name1","id1","987654321"));
+            studentLists.add(new StudentObject("name2","id2","887654321"));
+            studentLists.add(new StudentObject("name4","id3","787654321"));
+            */
+            String url = strings[0];
+            Log.d(url,"ok");
+            String responseJson = null;
+
+                OkHttpClient client = new OkHttpClient();
+                Request request = new Request.Builder()
+                        .url(url)
+                        .build();
+
+                Response response = null;
+                try {
+                    response = client.newCall(request).execute();
+                    Log.d("response","ok");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    responseJson = response.body().string();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                Log.d("response body ",responseJson);
+
+            JSONArray jsonArray = null;
+            try {
+                jsonArray = new JSONArray(responseJson);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            for (int i =0; i<jsonArray.length(); ++i){
+                JSONObject jsonObject = null;
+                try {
+                    jsonObject = jsonArray.getJSONObject(i);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    studentLists.add(new StudentObject(jsonObject.getString("name"),jsonObject.getString("id"),jsonObject.getString("phno")));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            return studentLists;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<StudentObject> studentObjects) {
+            super.onPostExecute(studentObjects);
+            MyListAdapter adapter = new MyListAdapter(getApplicationContext(),R.layout.mylist,studentObjects);
+            listView.setAdapter(adapter);
+        }
+    }
 }
