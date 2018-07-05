@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "454594757515",
+    "firebase_url": "https://takshakapp18.firebaseio.com",
+    "project_id": "takshakapp18",
+    "storage_bucket": "takshakapp18.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:454594757515:android:b3085439640e83cb",
+        "android_client_info": {
+          "package_name": "com.takshak.mace.takshak2k18"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "454594757515-jibker24qtu4669tv3joaqkmshp7imtf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGsQ3oQSdDFE2PFq5VGxJ9BC8VNTcY-CY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
