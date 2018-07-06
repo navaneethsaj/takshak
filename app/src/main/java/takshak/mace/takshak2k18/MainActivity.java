@@ -23,13 +23,20 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,6 +53,13 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     ListView listView;
     String url = "https://demo1275613.mockable.io/test";
+    FirebaseDatabase database;
+    DatabaseReference notificationRef;
+    //TextView notificationTextview, readMore;
+    //boolean ismessageExpanded = false;
+    //LinearLayout notificationlayout;
+    EditText messagebox;
+    Button sendbutton;
 
     @TargetApi(Build.VERSION_CODES.M)
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -62,7 +76,7 @@ public class MainActivity extends AppCompatActivity
 
 
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 
         fab.setRippleColor(Color.GREEN);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -86,6 +100,52 @@ public class MainActivity extends AppCompatActivity
         //goes from here
         listView = (ListView) findViewById(R.id.listview);
 
+        messagebox = findViewById(R.id.messageBox);
+        sendbutton = findViewById(R.id.messagesendButton);
+
+        database = FirebaseDatabase.getInstance();
+        notificationRef = database.getReference("notification");
+
+        sendbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                notificationRef.child("message").setValue(messagebox.getText().toString());
+            }
+        });
+        /*notificationRef = database.getReference("notification");
+        notificationlayout = findViewById(R.id.notificationlayout);
+        notificationTextview = findViewById(R.id.notificationBox);
+        readMore =findViewById(R.id.readmore);
+        notificationTextview.setMaxLines(2);
+
+        notificationRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String message = dataSnapshot.child("message").getValue().toString();
+                notificationTextview.setText(message);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        notificationlayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (ismessageExpanded == false){
+                    notificationTextview.setMaxLines(15);
+                    readMore.setText("Show less");
+                    ismessageExpanded = true;
+                }else {
+                    notificationTextview.setMaxLines(2);
+                    readMore.setText("Show more");
+                    ismessageExpanded = false;
+                }
+            }
+        });
+        */
         new MyAsyncTask().execute(url);
 
     }

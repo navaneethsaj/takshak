@@ -1,6 +1,7 @@
 package takshak.mace.takshak2k18;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -22,9 +23,12 @@ import java.util.List;
 
 public class MyListAdapter extends ArrayAdapter<StudentObject> {
     LayoutInflater layoutInflater;
+    String MyPREFERENCES = "buttondisablepreference";
     FirebaseDatabase database;
     DatabaseReference myRef;
     Context context;
+    SharedPreferences sharedpreferences;
+    SharedPreferences.Editor editor;
     ArrayList<StudentObject> studentObjectLists ;
     public MyListAdapter(@NonNull Context context, int resource, @NonNull ArrayList<StudentObject> objects) {
         super(context, resource, objects);
@@ -33,6 +37,12 @@ public class MyListAdapter extends ArrayAdapter<StudentObject> {
 
          database = FirebaseDatabase.getInstance();
          myRef = database.getReference("ranklist");
+
+         sharedpreferences = context.getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
+
+         editor = sharedpreferences.edit();
+
+
 
     }
 
@@ -50,42 +60,49 @@ public class MyListAdapter extends ArrayAdapter<StudentObject> {
         TextView textViewIdentifier = (TextView) v.findViewById(R.id.identifier);
         TextView textViewName = (TextView) v.findViewById(R.id.name);
         TextView textViewMobileno = (TextView) v.findViewById(R.id.mobileno);
-        Button rankbutton = (Button) v.findViewById(R.id.rankbutton);
+        final Button rankbutton = (Button) v.findViewById(R.id.rankbutton);
 
         textViewIdentifier.setText(studentObjectLists.get(position).getIdentifier());
         textViewName.setText(studentObjectLists.get(position).getName());
         textViewMobileno.setText(studentObjectLists.get(position).getMobileno());
 
-        rankbutton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //Toast.makeText(context,"clicked user id : "+studentObjectLists.get(position).getIdentifier()+"\nMake url request",Toast.LENGTH_SHORT).show();
-                myRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        int rankupValue = 5;
-                        int rank;
-                        Object obj = dataSnapshot.child(studentObjectLists.get(position).getIdentifier()).getValue();
-                        if (obj != null){
-                            rank = Integer.valueOf(obj.toString());
-                        }else {
-                            rank = 0;
-                        }
-                        myRef.child(studentObjectLists.get(position).getIdentifier()).setValue(rank+rankupValue);
-                        Toast.makeText(context,
-                                "UID "+studentObjectLists.get(position).getIdentifier()+
-                                    "\nScore "+(rank+rankupValue)
+        if(sharedpreferences.getBoolean(studentObjectLists.get(position).getIdentifier(),false) == true){
+            rankbutton.setText("Ranked");
+            rankbutton.setEnabled(false);
+        }else {
+            rankbutton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    //Toast.makeText(context,"clicked user id : "+studentObjectLists.get(position).getIdentifier()+"\nMake url request",Toast.LENGTH_SHORT).show();
+                    myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            int rankupValue = 5;
+                            int rank;
+                            Object obj = dataSnapshot.child(studentObjectLists.get(position).getIdentifier()).getValue();
+                            if (obj != null){
+                                rank = Integer.valueOf(obj.toString());
+                            }else {
+                                rank = 0;
+                            }
+                            myRef.child(studentObjectLists.get(position).getIdentifier()).setValue(rank+rankupValue);
+                            Toast.makeText(context,
+                                    "UID "+studentObjectLists.get(position).getIdentifier()+
+                                            "\nScore "+(rank+rankupValue)
                                     ,Toast.LENGTH_LONG).show();
-                    }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                        }
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
 
-                    }
-                });
-
-            }
-        });
-
+                        }
+                    });
+                    editor.putBoolean(studentObjectLists.get(position).getIdentifier(),true);
+                    editor.commit();
+                    rankbutton.setText("Ranked");
+                    rankbutton.setEnabled(false);
+                }
+            });
+        }
         return v;
     }
 }
