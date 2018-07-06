@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -29,6 +30,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -55,11 +57,14 @@ public class MainActivity extends AppCompatActivity
     String url = "https://demo1275613.mockable.io/test";
     FirebaseDatabase database;
     DatabaseReference notificationRef;
+    ProgressBar progressBar;
     //TextView notificationTextview, readMore;
     //boolean ismessageExpanded = false;
     //LinearLayout notificationlayout;
     EditText messagebox;
+    AlertDialog.Builder builder;
     Button sendbutton;
+    AlertDialog dialog;
 
     @TargetApi(Build.VERSION_CODES.M)
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -71,7 +76,6 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
         toolbar.setBackgroundColor(getColor(R.color.blue));
         toolbar.setTitleTextColor(Color.WHITE);
-
 
 
 
@@ -99,17 +103,42 @@ public class MainActivity extends AppCompatActivity
 
         //goes from here
         listView = (ListView) findViewById(R.id.listview);
-
         messagebox = findViewById(R.id.messageBox);
         sendbutton = findViewById(R.id.messagesendButton);
 
         database = FirebaseDatabase.getInstance();
         notificationRef = database.getReference("notification");
 
+        builder = new AlertDialog.Builder(this);
+        builder.setTitle("Please Wait").setMessage("Fetching applicant list from server");
+        dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
+
+
         sendbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                notificationRef.child("message").setValue(messagebox.getText().toString());
+                sendbutton.setText("Sending");
+                messagebox.setEnabled(false);
+                sendbutton.setEnabled(false);
+                notificationRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        String prevmsg = dataSnapshot.child("message").getValue().toString();
+                        notificationRef.child("message").setValue(messagebox.getText().toString() +"\n\n"+ prevmsg);
+                        messagebox.setText("");
+                        sendbutton.setText("Send");
+                        Toast.makeText(getApplicationContext(),"Message sent",Toast.LENGTH_SHORT).show();
+                        messagebox.setEnabled(true);
+                        sendbutton.setEnabled(true);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
             }
         });
         /*notificationRef = database.getReference("notification");
@@ -281,6 +310,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            dialog.show();
         }
 
         @Override
@@ -288,6 +318,7 @@ public class MainActivity extends AppCompatActivity
             super.onPostExecute(studentObjects);
             MyListAdapter adapter = new MyListAdapter(getApplicationContext(),R.layout.mylist,studentObjects);
             listView.setAdapter(adapter);
+            dialog.dismiss();
         }
     }
 }
