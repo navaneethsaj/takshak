@@ -1,8 +1,11 @@
 package takshak.mace.takshak2k18;
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -125,7 +128,7 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         String prevmsg = dataSnapshot.child("message").getValue().toString();
-                        notificationRef.child("message").setValue(messagebox.getText().toString() +"\n\n"+ prevmsg);
+                        notificationRef.child("message").setValue("\u25C6"+messagebox.getText().toString() +"\n\n"+ prevmsg);
                         messagebox.setText("");
                         sendbutton.setText("Send");
                         Toast.makeText(getApplicationContext(),"Message sent",Toast.LENGTH_SHORT).show();
@@ -175,8 +178,21 @@ public class MainActivity extends AppCompatActivity
             }
         });
         */
-        new MyAsyncTask().execute(url);
 
+        ConnectivityManager conMgr = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if ( conMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED
+                || conMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED ) {
+
+            // notify user you are online
+            new MyAsyncTask().execute(url);
+
+        }
+        else if ( conMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.DISCONNECTED
+                || conMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.DISCONNECTED) {
+                Toast.makeText(this,"Device offline\nConnect to internet and restart app",Toast.LENGTH_LONG).show();
+            // notify user you are not online
+        }
     }
 
     @Override
