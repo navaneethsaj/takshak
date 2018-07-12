@@ -11,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -37,6 +38,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -65,10 +71,10 @@ public class MainActivity extends AppCompatActivity
     //boolean ismessageExpanded = false;
     //LinearLayout notificationlayout;
     EditText messagebox;
-    AlertDialog.Builder builder;
+    AlertDialog.Builder builder,authbuilder;
     Button sendbutton;
-    AlertDialog dialog;
-
+    AlertDialog dialog, authdialog;
+    private FirebaseAuth mAuth;
     @TargetApi(Build.VERSION_CODES.M)
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -116,6 +122,11 @@ public class MainActivity extends AppCompatActivity
         builder.setTitle("Please Wait").setMessage("Fetching applicant list from server");
         dialog = builder.create();
         dialog.setCanceledOnTouchOutside(false);
+
+        authbuilder = new AlertDialog.Builder(this);
+        authbuilder.setTitle("Please Wait").setMessage("Authenticating User");
+        authdialog = authbuilder.create();
+        authdialog.setCanceledOnTouchOutside(false);
 
 
         sendbutton.setOnClickListener(new View.OnClickListener() {
@@ -185,7 +196,35 @@ public class MainActivity extends AppCompatActivity
                 || conMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED ) {
 
             // notify user you are online
-            new MyAsyncTask().execute(url);
+            mAuth = FirebaseAuth.getInstance();
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            if(currentUser == null){
+                if (!authdialog.isShowing()){
+                    authdialog.show();
+                }
+                Log.d("auth","Not Authenticated");
+                mAuth.signInAnonymously().addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()){
+                            Log.d("auth", "signInAnonymously:success");
+                            if(authdialog.isShowing()){
+                                authdialog.dismiss();
+                            }
+                            new MyAsyncTask().execute(url);
+                        }else {
+                            if(authdialog.isShowing()){
+                                authdialog.dismiss();
+                            }
+                            Toast.makeText(getApplicationContext(),"Authentication Failed\nCheck network",Toast.LENGTH_SHORT).show();
+                            Log.w("auth", "signInAnonymously:failure", task.getException());
+                        }
+                    }
+                });
+            }else {
+                Log.d("auth","Authenticated user");
+                new MyAsyncTask().execute(url);
+            }
 
         }
         else if ( conMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.DISCONNECTED
@@ -326,7 +365,9 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            dialog.show();
+            if (!dialog.isShowing()){
+                dialog.show();
+            }
         }
 
         @Override
@@ -334,7 +375,9 @@ public class MainActivity extends AppCompatActivity
             super.onPostExecute(studentObjects);
             MyListAdapter adapter = new MyListAdapter(getApplicationContext(),R.layout.mylist,studentObjects);
             listView.setAdapter(adapter);
-            dialog.dismiss();
+            if (dialog.isShowing()){
+                dialog.dismiss();
+            }
         }
     }
 }
